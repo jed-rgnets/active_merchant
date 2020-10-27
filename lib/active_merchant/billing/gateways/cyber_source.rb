@@ -396,14 +396,24 @@ module ActiveMerchant #:nodoc:
         )
 
         xml = Builder::XmlMarkup.new indent: 2
-        add_address(xml, payment_method, options[:billing_address], options)
-        add_purchase_data(xml, options[:setup_fee] || 0, true, options)
-        if card_brand(payment_method) == 'check'
-          add_check(xml, payment_method)
-          add_check_payment_method(xml)
+
+        if is_jwt_transient_token?(payment_method)
+          add_purchase_data(xml, options[:setup_fee] || 0, true, options)
+          add_jwt_transient_token(xml, payment_method)
         else
-          add_creditcard(xml, payment_method)
-          add_creditcard_payment_method(xml)
+          add_address(xml, payment_method, options[:billing_address], options)
+          add_purchase_data(xml, options[:setup_fee] || 0, true, options)
+          if is_transient_token(payment_method)
+            add_transient_token(payment_method)
+          elsif !payment_method.is_a?(String)
+            if card_brand(payment_method) == 'check'
+              add_check(xml, payment_method)
+              add_check_payment_method(xml)
+            else
+              add_creditcard(xml, payment_method)
+              add_creditcard_payment_method(xml)
+            end
+          end
         end
         add_subscription(xml, options)
         if options[:setup_fee]
@@ -521,8 +531,13 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, payment_method, address, options, shipTo = false)
         xml.tag! shipTo ? 'shipTo' : 'billTo' do
-          xml.tag! 'firstName',             payment_method.first_name if payment_method
-          xml.tag! 'lastName',              payment_method.last_name if payment_method
+          if payment_method.is_a?(String)
+            xml.tag! 'firstName',           options[:first_name]
+            xml.tag! 'lastName',            options[:last_name]
+          else
+            xml.tag! 'firstName',           payment_method.first_name if payment_method
+            xml.tag! 'lastName',            payment_method.last_name if payment_method
+          end
           xml.tag! 'street1',               address[:address1]
           xml.tag! 'street2',               address[:address2] unless address[:address2].blank?
           xml.tag! 'city',                  address[:city]
@@ -537,6 +552,16 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
           xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?
         end
+      end
+
+      def add_jwt_transient_token(xml, token)
+        xml.tag! 'tokenSource' do
+          xml.tag! 'transientToken', token
+        end
+      end
+
+      def is_jwt_transient_token?(payment_method)
+        payment_method.is_a?(String) && payment_method.length >= 64
       end
 
       def add_creditcard(xml, creditcard)
@@ -576,7 +601,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_mdd_fields(xml, options)
-        return unless options.keys.any? { |key| key.to_s.start_with?('mdd_field') && options[key] }
+        return unless options.keys.any? { |key| key.to_s.start_with?('mdd_field') }
 
         xml.tag! 'merchantDefinedData' do
           (1..100).each do |each|
@@ -807,7 +832,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
-        if payment_method_or_reference.is_a?(String)
+        if is_jwt_transient_token?(payment_method_or_reference)
+          add_address(xml, payment_method_or_reference, options[:billing_address], options)
+          add_address(xml, payment_method_or_reference, options[:shipping_address], options, true)
+          add_purchase_data(xml, money, true, options)
+          add_jwt_transient_token(xml, payment_method_or_reference)
+        elsif payment_method_or_reference.is_a?(String)
           add_purchase_data(xml, money, true, options)
           add_installments(xml, options)
           add_subscription(xml, options, payment_method_or_reference)
