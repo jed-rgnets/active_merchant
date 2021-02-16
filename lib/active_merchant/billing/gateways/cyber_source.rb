@@ -397,25 +397,27 @@ module ActiveMerchant #:nodoc:
 
         xml = Builder::XmlMarkup.new indent: 2
 
+        add_address(xml, payment_method, options[:billing_address], options)
+        add_purchase_data(xml, options[:setup_fee] || 0, true, options)
+
+        # add token or cc
         if is_jwt_transient_token?(payment_method)
-          add_purchase_data(xml, options[:setup_fee] || 0, true, options)
+          # flag to prevent the add_subscription method from adding extraneous
+          # fields that prevent the store from succeeding when using a token
+          options[:storing] = true
+          add_subscription(xml, options)
           add_jwt_transient_token(xml, payment_method)
-        else
-          add_address(xml, payment_method, options[:billing_address], options)
-          add_purchase_data(xml, options[:setup_fee] || 0, true, options)
-          if is_transient_token(payment_method)
-            add_transient_token(payment_method)
-          elsif !payment_method.is_a?(String)
-            if card_brand(payment_method) == 'check'
-              add_check(xml, payment_method)
-              add_check_payment_method(xml)
-            else
-              add_creditcard(xml, payment_method)
-              add_creditcard_payment_method(xml)
-            end
+        elsif !payment_method.is_a?(String)
+          add_subscription(xml, options)
+          if card_brand(payment_method) == 'check'
+            add_check(xml, payment_method)
+            add_check_payment_method(xml)
+          else
+            add_creditcard(xml, payment_method)
+            add_creditcard_payment_method(xml)
           end
         end
-        add_subscription(xml, options)
+
         if options[:setup_fee]
           if card_brand(payment_method) == 'check'
             add_check_service(xml)
@@ -803,19 +805,23 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'recurringSubscriptionInfo' do
           if reference
             subscription_id = reference.split(';')[6]
-            xml.tag! 'subscriptionID',  subscription_id
+            # allow caller to pass the subscription ID itself rather than a reference
+            xml.tag! 'subscriptionID', subscription_id || reference
           end
 
-          xml.tag! 'status',            options[:subscription][:status] if options[:subscription][:status]
-          xml.tag! 'amount',            localized_amount(options[:subscription][:amount].to_i, options[:currency] || default_currency) if options[:subscription][:amount]
-          xml.tag! 'numberOfPayments',  options[:subscription][:occurrences]                    if options[:subscription][:occurrences]
-          xml.tag! 'automaticRenew',    options[:subscription][:automatic_renew]                if options[:subscription][:automatic_renew]
-          xml.tag! 'frequency',         options[:subscription][:frequency]                      if options[:subscription][:frequency]
-          xml.tag! 'startDate',         options[:subscription][:start_date].strftime('%Y%m%d')  if options[:subscription][:start_date]
-          xml.tag! 'endDate',           options[:subscription][:end_date].strftime('%Y%m%d')    if options[:subscription][:end_date]
-          xml.tag! 'approvalRequired',  options[:subscription][:approval_required] || false
-          xml.tag! 'event',             options[:subscription][:event]                          if options[:subscription][:event]
-          xml.tag! 'billPayment',       options[:subscription][:bill_payment]                   if options[:subscription][:bill_payment]
+          xml.tag! 'frequency',           options[:subscription][:frequency]                      if options[:subscription][:frequency]
+          unless (options.delete(:storing))
+            xml.tag! 'status',            options[:subscription][:status] if options[:subscription][:status]
+            xml.tag! 'amount',            localized_amount(options[:subscription][:amount].to_i, options[:currency] || default_currency) if options[:subscription][:amount]
+            xml.tag! 'numberOfPayments',  options[:subscription][:occurrences]                    if options[:subscription][:occurrences]
+            xml.tag! 'automaticRenew',    options[:subscription][:automatic_renew]                if options[:subscription][:automatic_renew]
+            xml.tag! 'startDate',         options[:subscription][:start_date].strftime('%Y%m%d')  if options[:subscription][:start_date]
+            xml.tag! 'endDate',           options[:subscription][:end_date].strftime('%Y%m%d')    if options[:subscription][:end_date]
+            xml.tag! 'approvalRequired',  options[:subscription][:approval_required] || false
+            xml.tag! 'event',             options[:subscription][:event]                          if options[:subscription][:event]
+            xml.tag! 'billPayment',       options[:subscription][:bill_payment]                   if options[:subscription][:bill_payment]
+          end
+
         end
       end
 
