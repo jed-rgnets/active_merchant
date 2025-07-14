@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options = {})
-        request = build_create_payment_request(money, payment, options, authorization_mode: 'FINAL_AUTHORIZATION')
+        request = build_create_payment_request(money, payment, options, authorization_mode: 'SALE')
         begin
           response = @client.merchant(@merchant_id).payments.create_payment(request)
           success = response&.payment&.status == 'CAPTURE_REQUESTED' || response&.payment&.status == 'COMPLETED' || response&.payment&.status == 'PENDING_APPROVAL'
