@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
         @merchant_id = options[:partner]
         @api_key_id = options[:login]
         @secret_api_key = options[:password]
-        @integrator = options[:integrator] || 'ActiveMerchant' # Allow override, default to 'ActiveMerchant'
+        @integrator = 'ActiveMerchant'
         @client = build_client
         super
       end
