@@ -28,9 +28,7 @@ module ActiveMerchant #:nodoc:
         @api_key_id = options[:login]
         @secret_api_key = options[:password]
         @integrator = 'github.com/RGNets/active_merchant'
-        test_url = 'https://payment.preprod.anzworldline-solutions.com.au/'
-        live_url = 'https://payment.anzworldline-solutions.com.au/'
-        @api_endpoint = test? ? test_url : live_url
+        @api_endpoint = options[:test] ? 'https://payment.preprod.anzworldline-solutions.com.au/' : 'https://payment.anzworldline-solutions.com.au/'
         super
         @client = build_client
       end
