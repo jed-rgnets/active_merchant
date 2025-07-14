@@ -10,6 +10,7 @@ require 'onlinepayments/sdk/domain/personal_name'
 require 'onlinepayments/sdk/domain/address'
 require 'onlinepayments/sdk/domain/contact_details'
 require 'onlinepayments/sdk/domain/order_references'
+require 'onlinepayments/sdk/domain/three_d_secure'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -112,7 +113,7 @@ module ActiveMerchant #:nodoc:
         request = OnlinePayments::SDK::Domain::RefundRequest.new
         amount_of_money = OnlinePayments::SDK::Domain::AmountOfMoney.new
         amount_of_money.amount = money
-        amount_of_money.currency_code = options[:currency] || self.default_currency
+        amount_of_money.currency_code = (options[:currency] || self.default_currency).to_s.upcase
         request.amount_of_money = amount_of_money
         begin
           response = @client.merchant(@merchant_id).payments.refund_payment(authorization, request)
@@ -195,12 +196,18 @@ module ActiveMerchant #:nodoc:
         card_input.card = card
         card_input.payment_product_id = card_brand_id(payment.brand)
         card_input.authorization_mode = authorization_mode if authorization_mode
+        
+        # Disable 3D Secure authentication
+        three_d_secure = OnlinePayments::SDK::Domain::ThreeDSecure.new
+        three_d_secure.skip_authentication = true
+        card_input.three_d_secure = three_d_secure
+        
         req.card_payment_method_specific_input = card_input
 
         order = OnlinePayments::SDK::Domain::Order.new
         amount_of_money = OnlinePayments::SDK::Domain::AmountOfMoney.new
         amount_of_money.amount = money
-        amount_of_money.currency_code = options[:currency] || self.default_currency
+        amount_of_money.currency_code = (options[:currency] || self.default_currency).to_s.upcase
         order.amount_of_money = amount_of_money
 
         # Customer
