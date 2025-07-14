@@ -176,7 +176,8 @@ module ActiveMerchant #:nodoc:
           api_endpoint: 'https://api.onlinepayments.com',
           api_key_id: @api_key_id,
           secret_api_key: @secret_api_key,
-          integrator: @integrator
+          integrator: @integrator,
+          authorization_type: 'v1HMAC'
         )
         OnlinePayments::SDK::Factory.create_client_from_configuration(config)
       end
