@@ -22,10 +22,10 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
 
       def initialize(options = {})
-        requires!(options, :merchant_id, :api_key_id, :secret_api_key)
-        @merchant_id = options[:merchant_id]
-        @api_key_id = options[:api_key_id]
-        @secret_api_key = options[:secret_api_key]
+        requires!(options, :partner, :login, :password)
+        @merchant_id = options[:partner]
+        @api_key_id = options[:login]
+        @secret_api_key = options[:password]
         @client = build_client
         super
       end
