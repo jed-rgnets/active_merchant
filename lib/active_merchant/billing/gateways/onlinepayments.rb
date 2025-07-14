@@ -23,12 +23,13 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
 
       def initialize(options = {})
+        @options = options
         requires!(options, :partner, :login, :password)
         @merchant_id = options[:partner]
         @api_key_id = options[:login]
         @secret_api_key = options[:password]
         @integrator = 'github.com/RGNets/active_merchant'
-        @api_endpoint = 'https://payment.preprod.anzworldline-solutions.com.au'
+        @api_endpoint = test? ? 'https://payment.preprod.anzworldline-solutions.com.au' : 'https://payment.anzworldline-solutions.com.au'
         super
         @client = build_client
       end
