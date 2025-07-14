@@ -27,8 +27,8 @@ module ActiveMerchant #:nodoc:
         @api_key_id = options[:login]
         @secret_api_key = options[:password]
         @integrator = 'ActiveMerchant'
-        @client = build_client
-        @api_endpoint = options[:live_url]
+        # Use options[:live_url] if provided, otherwise use the default production endpoint
+        @api_endpoint = options[:live_url] || 'https://payment.preprod.anzworldline-solutions.com.au/'
         super
       end
 
