@@ -26,6 +26,7 @@ module ActiveMerchant #:nodoc:
         @merchant_id = options[:partner]
         @api_key_id = options[:login]
         @secret_api_key = options[:password]
+        @integrator = options[:integrator] || 'ActiveMerchant' # Allow override, default to 'ActiveMerchant'
         @client = build_client
         super
       end
@@ -174,7 +175,8 @@ module ActiveMerchant #:nodoc:
         config = OnlinePayments::SDK::CommunicatorConfiguration.new(
           api_endpoint: 'https://api.onlinepayments.com',
           api_key_id: @api_key_id,
-          secret_api_key: @secret_api_key
+          secret_api_key: @secret_api_key,
+          integrator: @integrator
         )
         OnlinePayments::SDK::Factory.create_client_from_configuration(config)
       end
