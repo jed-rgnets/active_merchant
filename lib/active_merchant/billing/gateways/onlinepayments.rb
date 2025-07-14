@@ -28,6 +28,7 @@ module ActiveMerchant #:nodoc:
         @secret_api_key = options[:password]
         @integrator = 'ActiveMerchant'
         @client = build_client
+        @api_endpoint = options[:live_url]
         super
       end
 
@@ -173,7 +174,7 @@ module ActiveMerchant #:nodoc:
 
       def build_client
         config = OnlinePayments::SDK::CommunicatorConfiguration.new(
-          api_endpoint: 'https://api.onlinepayments.com',
+          api_endpoint: @api_endpoint,
           api_key_id: @api_key_id,
           secret_api_key: @secret_api_key,
           integrator: @integrator,
