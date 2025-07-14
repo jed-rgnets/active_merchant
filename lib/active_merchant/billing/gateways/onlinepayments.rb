@@ -15,11 +15,11 @@ require 'onlinepayments/sdk/domain/three_d_secure'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class OnlinePaymentsGateway < Gateway
-      self.display_name = 'OnlinePayments (ANZ Worldline/Payone/CAWL)'
+      self.display_name = 'ANZ Worldline'
       self.homepage_url = 'https://docs.anzworldline-solutions.com.au/en/getting-started/'
       self.supported_countries = %w[US CA GB AU NL DE FR ES IT]
       self.supported_cardtypes = %i[visa master american_express discover jcb]
-      self.default_currency = 'USD'
+      self.default_currency = 'AUD'
       self.money_format = :cents
 
       def initialize(options = {})
@@ -28,7 +28,9 @@ module ActiveMerchant #:nodoc:
         @api_key_id = options[:login]
         @secret_api_key = options[:password]
         @integrator = 'github.com/RGNets/active_merchant'
-        @api_endpoint = options[:url]&.sub(/\/+\z/, '')
+        test_url = 'https://payment.preprod.anzworldline-solutions.com.au/'
+        live_url = 'https://payment.anzworldline-solutions.com.au/'
+        @api_endpoint = test? ? test_url : live_url
         super
         @client = build_client
       end
