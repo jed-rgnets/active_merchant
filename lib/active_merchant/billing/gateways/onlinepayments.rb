@@ -30,6 +30,7 @@ module ActiveMerchant #:nodoc:
         # Use options[:live_url] if provided, otherwise use the default production endpoint
         @api_endpoint = options[:live_url] || 'https://payment.preprod.anzworldline-solutions.com.au/'
         super
+        @client = build_client
       end
 
       def purchase(money, payment, options = {})
