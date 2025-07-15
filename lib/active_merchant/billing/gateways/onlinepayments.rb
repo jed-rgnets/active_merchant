@@ -15,14 +15,38 @@ require 'onlinepayments/sdk/domain/three_d_secure'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class OnlinePaymentsGateway < Gateway
-      self.display_name = 'ANZ Worldline'
-      self.homepage_url = 'https://docs.anzworldline-solutions.com.au/en/getting-started/'
-      self.supported_countries = %w[US CA GB AU NL DE FR ES IT]
-      self.supported_cardtypes = %i[visa master american_express discover jcb]
-      self.default_currency = 'AUD'
-      self.money_format = :cents
-      self.test_url = 'https://payment.preprod.anzworldline-solutions.com.au'
-      self.live_url = 'https://payment.anzworldline-solutions.com.au'
+      # Override these in subclasses
+      def self.display_name
+        'ANZ Worldline'
+      end
+
+      def self.homepage_url
+        'https://docs.anzworldline-solutions.com.au/en/getting-started/'
+      end
+
+      def self.supported_countries
+        %w[US CA GB AU NL DE FR ES IT]
+      end
+
+      def self.supported_cardtypes
+        %i[visa master american_express discover jcb]
+      end
+
+      def self.default_currency
+        'AUD'
+      end
+
+      def self.test_url
+        'https://payment.preprod.anzworldline-solutions.com.au'
+      end
+
+      def self.live_url
+        'https://payment.anzworldline-solutions.com.au'
+      end
+
+      def self.integrator_name
+        'github.com/RGNets/active_merchant'
+      end
 
       def initialize(options = {})
         @options = options
@@ -30,8 +54,8 @@ module ActiveMerchant #:nodoc:
         @merchant_id = options[:partner]
         @api_key_id = options[:login]
         @secret_api_key = options[:password]
-        @integrator = 'github.com/RGNets/active_merchant'
-        @api_endpoint = test? ? test_url : live_url
+        @integrator = self.class.integrator_name
+        @api_endpoint = test? ? self.class.test_url : self.class.live_url
         super
         @client = build_client
       end
@@ -285,6 +309,16 @@ module ActiveMerchant #:nodoc:
           'gateway_error'
         end
       end
+
+      # Set the class attributes
+      self.display_name = display_name
+      self.homepage_url = homepage_url
+      self.supported_countries = supported_countries
+      self.supported_cardtypes = supported_cardtypes
+      self.default_currency = default_currency
+      self.money_format = :cents
+      self.test_url = test_url
+      self.live_url = live_url
     end
   end
 end 
